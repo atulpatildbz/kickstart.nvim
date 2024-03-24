@@ -732,5 +732,43 @@ cmp.setup {
   },
 }
 
+-- Harpoon setup
+local harpoon = require("harpoon")
+-- REQUIRED
+harpoon:setup({})
+-- REQUIRED
+local conf = require("telescope.config").values
+local function toggle_telescope(harpoon_files)
+    local file_paths = {}
+    for _, item in ipairs(harpoon_files.items) do
+        table.insert(file_paths, item.value)
+    end
+
+    require("telescope.pickers").new({}, {
+        prompt_title = "Harpoon",
+        finder = require("telescope.finders").new_table({
+            results = file_paths,
+        }),
+        previewer = conf.file_previewer({}),
+        sorter = conf.generic_sorter({}),
+    }):find()
+end
+
+vim.keymap.set("n", "<leader>mm", function() harpoon:list():append() end)
+-- vim.keymap.set("n", "<leader>ml", function() harpoon.ui:toggle_quick_menu(harpoon:list()) end)
+-- create a command HarpoonList to call the above function
+vim.api.nvim_create_user_command("HarpoonList", function() harpoon.ui:toggle_quick_menu(harpoon:list()) end, {})
+vim.keymap.set("n", "<leader>ml", function() toggle_telescope(harpoon:list()) end,
+    { desc = "Open harpoon window" })
+
+-- Toggle previous & next buffers stored within Harpoon list
+vim.keymap.set("n", "<C-h>", function() harpoon:list():prev() end, { noremap = true, desc = "Previous harpoon buffer" })
+vim.keymap.set("n", "<C-l>", function() harpoon:list():next() end, { noremap = true, desc = "Next harpoon buffer" })
+
+vim.keymap.set("n", "<leader>m1", function() harpoon:list():select(1) end)
+vim.keymap.set("n", "<leader>m2", function() harpoon:list():select(2) end)
+vim.keymap.set("n", "<leader>m3", function() harpoon:list():select(3) end)
+vim.keymap.set("n", "<leader>m4", function() harpoon:list():select(4) end)
+
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
