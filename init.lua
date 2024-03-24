@@ -43,6 +43,9 @@ P.S. You can delete this when you're done too. It's your config now :)
 --  NOTE: Must happen before plugins are required (otherwise wrong leader will be used)
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
+vim.opt.expandtab = true
+vim.opt.tabstop = 4
+vim.opt.shiftwidth = 4
 
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    https://github.com/folke/lazy.nvim
@@ -71,7 +74,15 @@ require('lazy').setup({
 
   -- Git related plugins
   'tpope/vim-fugitive',
+  -- 'github/copilot.vim',
+  -- 'gptlang/CopilotChat.nvim',
   'tpope/vim-rhubarb',
+  {'kevinhwang91/nvim-bqf', ft = 'qf'},
+
+  {'junegunn/fzf', run = function()
+      vim.fn['fzf#install']()
+    end
+  },
 
   -- Detect tabstop and shiftwidth automatically
   'tpope/vim-sleuth',
@@ -197,6 +208,7 @@ require('lazy').setup({
       vim.cmd.colorscheme 'onedark'
     end,
   },
+  { "catppuccin/nvim", name = "catppuccin", priority = 1000 },
 
   {
     -- Set lualine as statusline
@@ -260,7 +272,24 @@ require('lazy').setup({
       require'hop'.setup { keys = 'etovxqpdygfblzhckisuran' }
     end,
   },
-
+-- Use your favorite package manager to install, for example in lazy.nvim
+--  Optionally, you can also install nvim-telescope/telescope.nvim to use some search functionality.
+  'prettier/vim-prettier',
+  {
+      "kylechui/nvim-surround",
+      version = "*", -- Use for stability; omit to use `main` branch for the latest features
+      event = "VeryLazy",
+      config = function()
+          require("nvim-surround").setup({
+              -- Configuration here, or leave empty to use defaults
+          })
+      end
+  },
+  {
+      'windwp/nvim-autopairs',
+      event = "InsertEnter",
+      opts = {} -- this is equalent to setup({}) function
+  },
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
   --       These are some example plugins that I've included in the kickstart repository.
   --       Uncomment any of the lines below to enable them.
@@ -274,6 +303,21 @@ require('lazy').setup({
   --
   --    For additional information see: https://github.com/folke/lazy.nvim#-structuring-your-plugins
   -- { import = 'custom.plugins' },
+   {
+    "harrisoncramer/gitlab.nvim",
+    dependencies = {
+      "MunifTanjim/nui.nvim",
+      "nvim-lua/plenary.nvim",
+      "sindrets/diffview.nvim",
+      "stevearc/dressing.nvim", -- Recommended but not required. Better UI for pickers.
+      "nvim-tree/nvim-web-devicons" -- Recommended but not required. Icons in discussion tree.
+    },
+    enabled = true,
+    build = function () require("gitlab.server").build(true) end, -- Builds the Go binary
+    config = function()
+      require("gitlab").setup()
+    end,
+  }
 }, {})
 
 -- [[ Setting options ]]
@@ -281,7 +325,7 @@ require('lazy').setup({
 -- NOTE: You can change these options as you wish!
 
 -- Set highlight on search
-vim.o.hlsearch = false
+-- vim.o.hlsearch = false
 
 -- Make line numbers default
 vim.wo.number = true
@@ -338,7 +382,7 @@ vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = tr
 -- Diagnostic keymaps
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous diagnostic message' })
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next diagnostic message' })
-vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Open floating diagnostic message' })
+vim.keymap.set('n', 'gh', vim.diagnostic.open_float, { desc = 'Open floating diagnostic message' })
 -- vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostics list' })
 -- Hop keymaps
 vim.api.nvim_set_keymap('n', 's', ":HopChar2<CR>", {silent = true})
@@ -348,6 +392,18 @@ vim.api.nvim_set_keymap('n', '<leader>yn', [[:let @+ = expand("%:t")<CR>]], {nor
 vim.api.nvim_set_keymap('n', '<leader>yp', [[:let @+=expand('%')<CR>]], {noremap = true, silent = true})
 vim.api.nvim_set_keymap('n', '<C-n>', ':tabnew<CR>', {noremap = true, silent = true})
 vim.api.nvim_set_keymap('n', '<C-t>', ':tab split<CR>', {noremap = true, silent = true})
+vim.api.nvim_set_keymap('n', '<leader>;', ':Prettier<CR>', {noremap = true, silent = true})
+
+-- funciton to paste text from my unnamed buffer
+-- the pasted text should be `console.info("<text>: ", text)`
+local function paste_text()
+  local text = vim.fn.getreg '"'
+  vim.cmd [[normal! o]]
+  vim.fn.setreg('+', 'console.info("' .. text .. ': ", ' .. text .. ')')
+  vim.cmd [[normal! "+p]]
+end
+
+vim.keymap.set('n', '<leader>lc', paste_text, { desc = 'paste text' })
 
 -- [[ Highlight on yank ]]
 -- See `:help vim.highlight.on_yank()`
@@ -440,6 +496,7 @@ vim.keymap.set('n', '<leader>rg', require('telescope.builtin').live_grep, { desc
 vim.keymap.set('n', '<leader>sG', ':LiveGrepGitRoot<cr>', { desc = '[S]earch by [G]rep on Git Root' })
 vim.keymap.set('n', '<leader>sd', require('telescope.builtin').diagnostics, { desc = '[S]earch [D]iagnostics' })
 vim.keymap.set('n', '<leader>sr', require('telescope.builtin').resume, { desc = '[S]earch [R]esume' })
+vim.keymap.set('n', '<leader>n', ':noh<cr>', { desc = 'remove hightlight' })
 
 -- [[ Configure Treesitter ]]
 -- See `:help nvim-treesitter`
@@ -657,15 +714,15 @@ cmp.setup {
       behavior = cmp.ConfirmBehavior.Replace,
       select = true,
     },
-    ['<Tab>'] = cmp.mapping(function(fallback)
-      if cmp.visible() then
-        cmp.select_next_item()
-      elseif luasnip.expand_or_locally_jumpable() then
-        luasnip.expand_or_jump()
-      else
-        fallback()
-      end
-    end, { 'i', 's' }),
+    -- ['<Tab>'] = cmp.mapping(function(fallback)
+    --   if cmp.visible() then
+    --     cmp.select_next_item()
+    --   elseif luasnip.expand_or_locally_jumpable() then
+    --     luasnip.expand_or_jump()
+    --   else
+    --     fallback()
+    --   end
+    -- end, { 'i', 's' }),
     ['<S-Tab>'] = cmp.mapping(function(fallback)
       if cmp.visible() then
         cmp.select_prev_item()
