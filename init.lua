@@ -396,6 +396,9 @@ end
 
 vim.keymap.set('n', '<leader>lc', paste_text, { desc = 'paste text' })
 
+-- in visual mode, space p should not replace the content of buffer
+vim.keymap.set('v', '<leader>p', '"_dP', { desc = 'paste text' })
+
 -- [[ Highlight on yank ]]
 -- See `:help vim.highlight.on_yank()`
 local highlight_group = vim.api.nvim_create_augroup('YankHighlight', { clear = true })
