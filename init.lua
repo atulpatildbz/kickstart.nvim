@@ -775,3 +775,42 @@ vim.keymap.set("n", "<leader>m4", function() harpoon:list():select(4) end)
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
+-- Define the custom function
+local function change_it_to_it_only()
+-- Jest keybindings
+local function toggle_it_block()
+  local ts_utils = require("nvim-treesitter.ts_utils")
+  -- local parser = vim.treesitter.get_parser(0, "javascript") -- Assuming JavaScript for this example
+  -- local tree = parser:parse()
+  local cursor_node = ts_utils.get_node_at_cursor()
+
+  local function toggle_text(node, search, replace)
+      local start_row, start_col, end_row, end_col = node:child(0):range()
+      local text = vim.api.nvim_buf_get_text(0, start_row, start_col, end_row, end_col, {})
+      local new_text = text[1]:gsub(search, replace)
+      vim.api.nvim_buf_set_text(0, start_row, start_col, end_row, end_col, {new_text})
+  end
+  -- Find the parent 'it' block
+  local it_block = cursor_node
+  while it_block do
+    if it_block:type() == "call_expression" then
+      local identifier_text = table.concat(ts_utils.get_node_text(it_block:child(0), 0))
+      local toggle_map = {
+        ["it"] = "it.only",
+        ["it.only"] = "it",
+        ["describe"] = "describe.only",
+        ["describe.only"] = "describe"
+      }
+
+      if toggle_map[identifier_text] then
+        toggle_text(it_block, identifier_text, toggle_map[identifier_text])
+        return
+      end
+    end
+    it_block = it_block:parent()
+  end
+  print("No 'it' or 'describe' block found")
+end
+
+-- Bind the function to a key, for example, <leader>io
+vim.keymap.set('n', '<leader>tn', toggle_it_block, { desc = 'change it to it.only' })
