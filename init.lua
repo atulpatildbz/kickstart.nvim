@@ -105,6 +105,10 @@ require('lazy').setup({
       'folke/neodev.nvim',
     },
   },
+  {
+    "L3MON4D3/LuaSnip",
+    dependencies = { "rafamadriz/friendly-snippets" },
+  },
 
   {
     -- Autocompletion
@@ -246,6 +250,12 @@ require('lazy').setup({
       -- Only load if `make` is available. Make sure you have the system
       -- requirements installed.
       {
+          "nvim-telescope/telescope-live-grep-args.nvim" ,
+          -- This will not install any breaking changes.
+          -- For major updates, this must be adjusted manually.
+          version = "^1.0.0",
+      },
+      {
         'nvim-telescope/telescope-fzf-native.nvim',
         -- NOTE: If you are having trouble with this installation,
         --       refer to the README for telescope-fzf-native for more instructions.
@@ -383,14 +393,14 @@ vim.api.nvim_set_keymap('n', '<leader>yn', [[:let @+ = expand("%:t")<CR>]], {nor
 vim.api.nvim_set_keymap('n', '<leader>yp', [[:let @+=expand('%')<CR>]], {noremap = true, silent = true})
 vim.api.nvim_set_keymap('n', '<C-n>', ':tabnew<CR>', {noremap = true, silent = true})
 vim.api.nvim_set_keymap('n', '<C-t>', ':tab split<CR>', {noremap = true, silent = true})
-vim.api.nvim_set_keymap('n', '<leader>;', ':Prettier<CR>', {noremap = true, silent = true})
+vim.api.nvim_set_keymap('n', '<leader>;', ':PrettierAsync<CR>', {noremap = true, silent = true})
 
 -- funciton to paste text from my unnamed buffer
 -- the pasted text should be `console.info("<text>: ", text)`
 local function paste_text()
   local text = vim.fn.getreg '"'
   vim.cmd [[normal! o]]
-  vim.fn.setreg('+', 'console.info("' .. text .. ': ", ' .. text .. ')')
+  vim.fn.setreg('+', 'console.info("AtulLog: ' .. text .. ': ", ' .. text .. ')')
   vim.cmd [[normal! "+p]]
 end
 
@@ -412,6 +422,7 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 
 -- [[ Configure Telescope ]]
 -- See `:help telescope` and `:help telescope.setup()`
+local lga_actions = require("telescope-live-grep-args.actions")
 require('telescope').setup {
   defaults = {
     layout_strategy = "vertical",
@@ -422,6 +433,22 @@ require('telescope').setup {
       },
     },
   },
+  extensions = {
+    live_grep_args = {
+      auto_quoting = true, -- enable/disable auto-quoting
+      -- define mappings, e.g.
+      mappings = { -- extend mappings
+        i = {
+          ["<C-k>"] = lga_actions.quote_prompt(),
+          ["<C-i>"] = lga_actions.quote_prompt({ postfix = " --iglob " }),
+        },
+      },
+      -- ... also accepts theme settings, for example:
+      -- theme = "dropdown", -- use dropdown theme
+      -- theme = { }, -- use own theme spec
+      -- layout_config = { mirror=true }, -- mirror preview pane
+    }
+  }
 }
 
 -- Enable telescope fzf native, if installed
@@ -487,7 +514,8 @@ vim.keymap.set('n', '<C-p>', require('telescope.builtin').git_files, { desc = 'S
 vim.keymap.set('n', '<leader>of', require('telescope.builtin').find_files, { desc = '[O]pen [F]iles' })
 vim.keymap.set('n', '<leader>sh', require('telescope.builtin').help_tags, { desc = '[S]earch [H]elp' })
 vim.keymap.set('n', '<leader>f', require('telescope.builtin').grep_string, { desc = '[S]earch current [W]ord' })
-vim.keymap.set('n', '<leader>rg', require('telescope.builtin').live_grep, { desc = '[S]earch by [G]rep' })
+-- vim.keymap.set('n', '<leader>rg', require('telescope.builtin').live_grep, { desc = '[S]earch by [G]rep' })
+vim.keymap.set("n", "<leader>rg", ":lua require('telescope').extensions.live_grep_args.live_grep_args()<CR>")
 vim.keymap.set('n', '<leader>sG', ':LiveGrepGitRoot<cr>', { desc = '[S]earch by [G]rep on Git Root' })
 vim.keymap.set('n', '<leader>sd', require('telescope.builtin').diagnostics, { desc = '[S]earch [D]iagnostics' })
 vim.keymap.set('n', '<leader>sr', require('telescope.builtin').resume, { desc = '[S]earch [R]esume' })
@@ -682,13 +710,96 @@ mason_lspconfig.setup_handlers {
     }
   end,
 }
+require('luasnip.loaders.from_vscode').lazy_load()
 
 -- [[ Configure nvim-cmp ]]
 -- See `:help cmp`
 local cmp = require 'cmp'
 local luasnip = require 'luasnip'
-require('luasnip.loaders.from_vscode').lazy_load()
-luasnip.config.setup {}
+local lstypes = require 'luasnip.util.types'
+luasnip.config.set_config {
+  history = true,
+  updateevents = 'TextChanged,TextChangedI',
+  enable_autosnippets = true,
+}
+
+-- local lss = luasnip.s
+-- local lsfmt = require('luasnip.extras.fmt').fmt
+-- local lsi = luasnip.insert_node
+-- local lsrep = require("luasnip.extras").rep
+
+luasnip.snippets = {
+  all = {
+    luasnip.parser.parse_snippet("ex", "-- something")
+  }
+}
+
+vim.keymap.set({"i", "s"}, "<c-l>", function()
+  if luasnip.expand_or_jumpable() then
+    luasnip.expand_or_jump()
+  end
+end, { silent = true })
+
+vim.keymap.set({"i", "s"}, "<c-h>", function()
+  if luasnip.jumpable(-1) then
+    luasnip.jump(-1)
+  end
+end, { silent = true })
+
+local function ls_copy(args)
+	return args[1]
+end
+
+
+luasnip.add_snippets("all", {
+	luasnip.snippet("atul", {
+		-- Simple static text.
+		luasnip.text_node("//Parameters: "),
+		-- function, first parameter is the function, second the Placeholders
+		-- whose text it gets as input.
+		luasnip.function_node(ls_copy, 2),
+		luasnip.text_node({ "", "function " }),
+		-- Placeholder/Insert.
+		luasnip.insert_node(1),
+		luasnip.text_node("("),
+		-- Placeholder with initial text.
+		luasnip.insert_node(2, "int foo"),
+		-- Linebreak
+		luasnip.text_node({ ") {", "\t" }),
+		-- Last Placeholder, exit Point of the snippet.
+		luasnip.insert_node(0),
+		luasnip.text_node({ "", "}" }),
+	})
+})
+
+luasnip.add_snippets("javascript", {
+  -- arrow function javascript
+  luasnip.snippet("arfn", {
+    luasnip.text_node("const "),
+    luasnip.insert_node(1),
+    luasnip.text_node(" = () => {"),
+    luasnip.insert_node(0),
+    luasnip.text_node({ "", "});" }),
+  }),
+  -- cy.get javascript. keep the text from clipboard as default
+  luasnip.snippet("cyget", {
+    luasnip.text_node("cy.get('"),
+    luasnip.insert_node(1, vim.fn.getreg('"')),
+    luasnip.text_node("')"),
+    luasnip.insert_node(0),
+  }),
+  luasnip.snippet("cycontains", {
+    luasnip.text_node("cy.get('"),
+    luasnip.insert_node(1, vim.fn.getreg('"')),
+    luasnip.text_node("').contains('"),
+    luasnip.insert_node(2),
+    luasnip.text_node("')"),
+    luasnip.insert_node(0),
+  }),
+})
+luasnip.filetype_extend("typescript", { "javascript" })
+luasnip.filetype_extend("javascriptreact", { "javscript" })
+luasnip.filetype_extend("typescriptreact", { "javascriptreact", "typescript" })
 
 cmp.setup {
   snippet = {
@@ -775,8 +886,7 @@ vim.keymap.set("n", "<leader>m4", function() harpoon:list():select(4) end)
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
--- Define the custom function
-local function change_it_to_it_only()
+
 -- Jest keybindings
 local function toggle_it_block()
   local ts_utils = require("nvim-treesitter.ts_utils")
