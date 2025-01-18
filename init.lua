@@ -200,18 +200,18 @@ vim.keymap.set('i', 'jk', '<ESC>', { desc = 'Exit insert mode', noremap = true }
 
 -- Function to run code based on file type
 function RunCode()
-  local file = vim.fn.expand('%:p')  -- Get full path
+  local file = vim.fn.expand '%:p' -- Get full path
   local file_type = vim.bo.filetype
   local cmd = ''
-  
+
   -- Create build directory if it doesn't exist
-  vim.fn.system('mkdir -p build')
-  
+  vim.fn.system 'mkdir -p build'
+
   if file_type == 'c' then
-    local out_file = 'build/' .. vim.fn.expand('%:t:r')
+    local out_file = 'build/' .. vim.fn.expand '%:t:r'
     cmd = string.format('clang %s -o %s && %s', file, out_file, out_file)
   elseif file_type == 'cpp' then
-    local out_file = 'build/' .. vim.fn.expand('%:t:r')
+    local out_file = 'build/' .. vim.fn.expand '%:t:r'
     cmd = string.format('clang++ -std=c++17 %s -o %s && %s', file, out_file, out_file)
   elseif file_type == 'typescript' then
     cmd = string.format('bun %s', file)
@@ -225,16 +225,16 @@ function RunCode()
     vim.notify('No run configuration for ' .. file_type, vim.log.levels.ERROR)
     return
   end
-  
+
   -- Save the file before running
-  vim.cmd('write')
-  
+  vim.cmd 'write'
+
   -- Open a terminal in a new split and run the command
-  vim.cmd('split')
+  vim.cmd 'split'
   vim.cmd('terminal ' .. cmd)
-  
+
   -- Enter insert mode to see the output
-  vim.cmd('startinsert')
+  vim.cmd 'startinsert'
 end
 
 -- Map <leader>r to run code
@@ -295,27 +295,27 @@ require('lazy').setup({
       },
       -- Keymaps in oil buffer
       keymaps = {
-        ["g?"] = "actions.show_help",
-        ["<CR>"] = "actions.select",
-        ["<C-v>"] = "actions.select_vsplit",
-        ["<C-s>"] = "actions.select_split",
-        ["<C-t>"] = "actions.select_tab",
-        ["<C-p>"] = "actions.preview",
-        ["<C-c>"] = "actions.close",
-        ["<C-r>"] = "actions.refresh",
-        ["-"] = "actions.parent",
-        ["_"] = "actions.open_cwd",
-        ["`"] = "actions.cd",
-        ["~"] = "actions.tcd",
-        ["gs"] = "actions.change_sort",
-        ["gx"] = "actions.open_external",
-        ["g."] = "actions.toggle_hidden",
+        ['g?'] = 'actions.show_help',
+        ['<CR>'] = 'actions.select',
+        ['<C-v>'] = 'actions.select_vsplit',
+        ['<C-s>'] = 'actions.select_split',
+        ['<C-t>'] = 'actions.select_tab',
+        ['<C-p>'] = 'actions.preview',
+        ['<C-c>'] = 'actions.close',
+        ['<C-r>'] = 'actions.refresh',
+        ['-'] = 'actions.parent',
+        ['_'] = 'actions.open_cwd',
+        ['`'] = 'actions.cd',
+        ['~'] = 'actions.tcd',
+        ['gs'] = 'actions.change_sort',
+        ['gx'] = 'actions.open_external',
+        ['g.'] = 'actions.toggle_hidden',
       },
       -- Set to false to disable all of the above keymaps
       use_default_keymaps = false,
     },
     -- Optional dependencies
-    dependencies = { "nvim-tree/nvim-web-devicons" },
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
   },
 
   -- NOTE: Plugins can also be added by using a table,
@@ -710,13 +710,13 @@ require('lazy').setup({
         -- gopls = {},
         clangd = {
           cmd = {
-            "clangd",
-            "--background-index",
-            "--clang-tidy",
-            "--header-insertion=iwyu",
-            "--completion-style=detailed",
-            "--function-arg-placeholders",
-            "--fallback-style=llvm",
+            'clangd',
+            '--background-index',
+            '--clang-tidy',
+            '--header-insertion=iwyu',
+            '--completion-style=detailed',
+            '--function-arg-placeholders',
+            '--fallback-style=llvm',
           },
           init_options = {
             usePlaceholders = true,
@@ -769,7 +769,7 @@ require('lazy').setup({
         'stylua', -- Used to format Lua code
         'clangd', -- C/C++ LSP
         'clang-format', -- C/C++ formatter
-        'codelldb',  -- Debugger for C/C++
+        'codelldb', -- Debugger for C/C++
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -1044,15 +1044,15 @@ require('lazy').setup({
   -- require 'kickstart.plugins.debug',
   -- require 'kickstart.plugins.indent_line',
   -- require 'kickstart.plugins.lint',
-  -- require 'kickstart.plugins.autopairs',
+  require 'kickstart.plugins.autopairs',
   -- require 'kickstart.plugins.neo-tree',
-  -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
-  -- { import = 'custom.plugins' },
+  { import = 'custom.plugins' },
   --
   -- For additional information with loading, sourcing and examples see `:help lazy.nvim-🔌-plugin-spec`
   -- Or use telescope!
