@@ -219,6 +219,8 @@ function RunCode()
     cmd = string.format('bun %s', file)
   elseif file_type == 'go' then
     cmd = string.format('go run %s', file)
+  elseif file_type == 'python' then
+    cmd = string.format('python3 %s', file)
   else
     vim.notify('No run configuration for ' .. file_type, vim.log.levels.ERROR)
     return
