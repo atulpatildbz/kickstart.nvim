@@ -240,6 +240,39 @@ end
 -- Map <leader>r to run code
 vim.keymap.set('n', '<leader>cr', RunCode, { desc = 'Run current file' })
 
+-- Function to insert language-specific logging statements
+function InsertLogStatement()
+  local file_type = vim.bo.filetype
+  local clipboard = vim.fn.getreg('+') -- Get clipboard content
+  local log_statement = ''
+  local log_prefix = 'AtulLog: '
+
+  -- Define log statements for different languages
+  if file_type == 'javascript' or file_type == 'typescript' or file_type == 'javascriptreact' or file_type == 'typescriptreact' then
+    log_statement = string.format('console.log("%s%s: ", %s);', log_prefix, clipboard, clipboard)
+  elseif file_type == 'python' then
+    log_statement = string.format('print(f"%s{%s=}")', log_prefix, clipboard)
+  elseif file_type == 'go' then
+    log_statement = string.format('fmt.Printf("%s%s: %%+v\\n", %s)', log_prefix, clipboard, clipboard)
+  elseif file_type == 'c' then
+    log_statement = string.format('printf("%s%s: %%d\\n", %s);', log_prefix, clipboard, clipboard)
+  elseif file_type == 'cpp' then
+    log_statement = string.format('std::cout << "%s%s: " << %s << std::endl;', log_prefix, clipboard, clipboard)
+  else
+    vim.notify('No log statement configuration for ' .. file_type, vim.log.levels.ERROR)
+    return
+  end
+
+  -- Get current cursor position
+  local row = vim.api.nvim_win_get_cursor(0)[1]
+  
+  -- Insert the log statement on the next line
+  vim.api.nvim_buf_set_lines(0, row, row, false, {log_statement})
+end
+
+-- Map <leader>lc to insert log statement
+vim.keymap.set('n', '<leader>lc', InsertLogStatement, { desc = '[L]og [C]lipboard value' })
+
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
