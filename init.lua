@@ -197,6 +197,46 @@ vim.keymap.set('n', '<leader>n', '<cmd>nohl<CR>', { desc = 'Clear search highlig
 -- Quick escape from insert mode with 'jk'
 vim.keymap.set('i', 'jk', '<ESC>', { desc = 'Exit insert mode', noremap = true })
 
+-- Function to run code based on file type
+function RunCode()
+  local file = vim.fn.expand('%:p')  -- Get full path
+  local file_type = vim.bo.filetype
+  local cmd = ''
+  
+  -- Create build directory if it doesn't exist
+  vim.fn.system('mkdir -p build')
+  
+  if file_type == 'c' then
+    local out_file = 'build/' .. vim.fn.expand('%:t:r')
+    cmd = string.format('clang %s -o %s && %s', file, out_file, out_file)
+  elseif file_type == 'cpp' then
+    local out_file = 'build/' .. vim.fn.expand('%:t:r')
+    cmd = string.format('clang++ -std=c++17 %s -o %s && %s', file, out_file, out_file)
+  elseif file_type == 'typescript' then
+    cmd = string.format('bun %s', file)
+  elseif file_type == 'javascript' then
+    cmd = string.format('bun %s', file)
+  elseif file_type == 'go' then
+    cmd = string.format('go run %s', file)
+  else
+    vim.notify('No run configuration for ' .. file_type, vim.log.levels.ERROR)
+    return
+  end
+  
+  -- Save the file before running
+  vim.cmd('write')
+  
+  -- Open a terminal in a new split and run the command
+  vim.cmd('split')
+  vim.cmd('terminal ' .. cmd)
+  
+  -- Enter insert mode to see the output
+  vim.cmd('startinsert')
+end
+
+-- Map <leader>r to run code
+vim.keymap.set('n', '<leader>cr', RunCode, { desc = 'Run current file' })
+
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
