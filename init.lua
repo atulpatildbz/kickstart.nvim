@@ -194,6 +194,7 @@ vim.keymap.set('n', '<leader>w', '<cmd>w<CR>', { desc = 'Save file' })
 vim.keymap.set('n', '<leader>q', '<cmd>q!<CR>', { desc = 'Quit without saving' })
 vim.keymap.set('n', '<leader>n', '<cmd>nohl<CR>', { desc = 'Clear search highlighting' })
 vim.keymap.set('n', '-', '<cmd>Oil<CR>', { desc = 'Open file explorer' })
+vim.keymap.set('n', '<C-t>', '<cmd>tab split<CR>', { desc = 'Open current buffer in new tab' })
 
 -- Quick escape from insert mode with 'jk'
 vim.keymap.set('i', 'jk', '<ESC>', { desc = 'Exit insert mode', noremap = true })
@@ -243,7 +244,7 @@ vim.keymap.set('n', '<leader>cr', RunCode, { desc = 'Run current file' })
 -- Function to insert language-specific logging statements
 function InsertLogStatement()
   local file_type = vim.bo.filetype
-  local clipboard = vim.fn.getreg('+') -- Get clipboard content
+  local clipboard = vim.fn.getreg '+' -- Get clipboard content
   local log_statement = ''
   local log_prefix = 'AtulLog: '
 
@@ -265,9 +266,9 @@ function InsertLogStatement()
 
   -- Get current cursor position
   local row = vim.api.nvim_win_get_cursor(0)[1]
-  
+
   -- Insert the log statement on the next line
-  vim.api.nvim_buf_set_lines(0, row, row, false, {log_statement})
+  vim.api.nvim_buf_set_lines(0, row, row, false, { log_statement })
 end
 
 -- Map <leader>lc to insert log statement
@@ -497,7 +498,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
-      vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
+      vim.keymap.set('n', '<leader>b', builtin.buffers, { desc = 'Search [B]uffers' })
 
       -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
@@ -790,7 +791,7 @@ require('lazy').setup({
     cmd = { 'ConformInfo' },
     keys = {
       {
-        '<leader>f',
+        '<leader>;',
         function()
           require('conform').format { async = true, lsp_format = 'fallback' }
         end,
